@@ -28,6 +28,49 @@
     return n;
   }
 
+  /* ---------- short-answer grading ---------- */
+  // 입력값과 정답을 비교하기 좋게 정규화한다.
+  function gradeNormalize(s) {
+    if (s == null) return "";
+    s = String(s);
+    s = s.replace(/\\text\{([^}]*)\}/g, "$1")
+         .replace(/\\mathrm\{([^}]*)\}/g, "$1")
+         .replace(/\\left|\\right/g, " ")
+         .replace(/\\[a-zA-Z]+/g, " ")     // 남은 LaTeX 명령
+         .replace(/[\${}^_\\]/g, " ");
+    s = s.toLowerCase();
+    // 단위·표기 통일
+    s = s.replace(/약\s*/g, "").replace(/대략/g, "");
+    // 공백·구두점 제거(한글·영문·숫자만 남김)
+    s = s.replace(/[\s,.\-·×*=/()[\]'"`+~∼≈?!:;…]/g, "");
+    return s;
+  }
+
+  // 정답 문자열에서 채점에 쓸 후보 정답들을 만든다.
+  function answerKeys(a) {
+    const keys = new Set();
+    const push = (v) => { const n = gradeNormalize(v); if (n) keys.add(n); };
+    push(a);
+    push(a.replace(/\([^)]*\)/g, " "));   // 괄호 설명 제거
+    let m; const re = /\(([^)]*)\)/g;     // 괄호 안 내용도 인정
+    while ((m = re.exec(a))) push(m[1]);
+    return keys;
+  }
+
+  function gradeAnswer(input, a) {
+    const u = gradeNormalize(input);
+    if (u.length < 1) return false;
+    for (const k of answerKeys(a)) {
+      if (!k) continue;
+      if (u === k) return true;
+      if (k.length >= 3 && u.length >= 3 && (k.includes(u) || u.includes(k))) {
+        const lo = Math.min(u.length, k.length), hi = Math.max(u.length, k.length);
+        if (lo / hi >= 0.5) return true;
+      }
+    }
+    return false;
+  }
+
   function renderMath(scope) {
     if (typeof renderMathInElement === "function") {
       try {
@@ -89,6 +132,7 @@
 
   /* ---------- main render ---------- */
   function renderTopic() {
+    if (window.SIMS) SIMS.stop();
     const topic = CURRICULUM[current.chapter].topics[current.topic];
     const chapter = CURRICULUM[current.chapter];
     contentEl.innerHTML = "";
@@ -149,11 +193,31 @@
       }
       root.appendChild(block);
     });
+
+    // 개념 학습용 인터랙티브 시뮬레이션
+    if (window.SIMS && SIMS.has(topic.id)) {
+      const section = el("div", "sim-section");
+      const head = el("div", "sim-head");
+      head.appendChild(el("span", "sim-tag", "SIMULATION"));
+      head.appendChild(el("h2", "sim-title", "직접 조작하며 이해하기"));
+      section.appendChild(head);
+      section.appendChild(el("p", "sim-note", "슬라이더를 움직여 값을 바꾸면 결과가 실시간으로 달라집니다."));
+      const host = el("div", "sim-host");
+      section.appendChild(host);
+      root.appendChild(section);
+      SIMS.render(topic.id, host);
+    }
   }
 
   function renderProblems(root, topic, key) {
     const list = topic[key] || [];
     if (!list.length) return root.appendChild(emptyMsg("문제가 준비 중입니다."));
+
+    const note = el("p", "grade-help",
+      "답을 입력하고 <b>채점하기</b>를 누르면 자동으로 맞는지 확인합니다. " +
+      "(개념·단답형은 자동 채점이 정확하고, 계산형은 <b>정답 보기</b>로 직접 비교하세요.)");
+    root.appendChild(note);
+
     list.forEach((p, i) => {
       const card = el("div", "problem " + key);
       const head = el("div", "problem-head");
@@ -161,15 +225,52 @@
       head.appendChild(el("p", "problem-q", p.q));
       card.appendChild(head);
 
-      const btn = el("button", "answer-btn");
-      btn.innerHTML = '<span class="sym">⊕</span> 정답 보기';
+      // 단답형 채점 입력
+      const gradeRow = el("div", "grade-row");
+      const input = el("input", "grade-input");
+      input.type = "text";
+      input.placeholder = "정답을 입력하세요";
+      input.setAttribute("aria-label", "정답 입력");
+      const gradeBtn = el("button", "grade-btn", "채점하기");
+      gradeRow.appendChild(input);
+      gradeRow.appendChild(gradeBtn);
+      card.appendChild(gradeRow);
+
+      const result = el("div", "grade-result");
+      card.appendChild(result);
+
       const ans = el("div", "answer");
       ans.innerHTML = '<span class="answer-label">ANSWER</span>' + p.a;
+
+      const btn = el("button", "answer-btn");
+      btn.innerHTML = '<span class="sym">⊕</span> 정답 보기';
       btn.addEventListener("click", () => {
         const open = ans.classList.toggle("show");
         btn.innerHTML = (open ? '<span class="sym">⊖</span> 정답 숨기기' : '<span class="sym">⊕</span> 정답 보기');
         if (open) renderMath(ans);
       });
+
+      function doGrade() {
+        if (!input.value.trim()) {
+          result.className = "grade-result";
+          result.textContent = "";
+          return;
+        }
+        const ok = gradeAnswer(input.value, p.a);
+        result.className = "grade-result show " + (ok ? "correct" : "wrong");
+        result.innerHTML = ok
+          ? '<span class="mark">✓</span> 정답입니다!'
+          : '<span class="mark">✗</span> 다시 풀어보세요. 헷갈리면 <b>정답 보기</b>로 확인하세요.';
+        input.classList.toggle("ok", ok);
+        input.classList.toggle("no", !ok);
+        if (ok && !ans.classList.contains("show")) btn.click(); // 정답이면 해설 자동 표시
+      }
+      gradeBtn.addEventListener("click", doGrade);
+      input.addEventListener("keydown", (e) => { if (e.key === "Enter") doGrade(); });
+      input.addEventListener("input", () => {
+        if (!input.value) { result.className = "grade-result"; result.textContent = ""; input.classList.remove("ok", "no"); }
+      });
+
       card.appendChild(btn);
       card.appendChild(ans);
       root.appendChild(card);

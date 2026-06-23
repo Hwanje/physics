@@ -357,6 +357,160 @@ body {
   opacity: 0.75;
 }
 
+/* ---------- Short-answer grading ---------- */
+.grade-help {
+  font-size: 13px;
+  color: var(--ink-soft);
+  background: var(--blue-tint);
+  border: 1px solid #cfe0fb;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin: 0 0 16px;
+  line-height: 1.6;
+}
+.grade-help b { color: var(--blue-deep); }
+
+.grade-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+.grade-input {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--f-body);
+  font-size: 14.5px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1.5px solid var(--line);
+  border-radius: 9px;
+  padding: 9px 13px;
+}
+.grade-input::placeholder { color: var(--ink-faint); }
+.grade-input:focus { outline: none; border-color: var(--blue); background: #fff; }
+.grade-input.ok { border-color: var(--c-basic); background: var(--c-basic-bg); }
+.grade-input.no { border-color: var(--c-adv); background: var(--c-adv-bg); }
+.grade-btn {
+  flex-shrink: 0;
+  font-family: var(--f-body);
+  font-weight: 600;
+  font-size: 13.5px;
+  color: #fff;
+  background: var(--blue);
+  border: none;
+  border-radius: 9px;
+  padding: 9px 18px;
+  cursor: pointer;
+}
+.grade-btn:hover { background: var(--blue-deep); }
+
+.grade-result {
+  display: none;
+  margin-top: 11px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 9px 13px;
+  border-radius: 9px;
+  line-height: 1.55;
+}
+.grade-result.show { display: block; }
+.grade-result .mark { font-family: var(--f-mono); margin-right: 6px; font-weight: 700; }
+.grade-result.correct { color: var(--c-basic); background: var(--c-basic-bg); border: 1px solid #bfe6df; }
+.grade-result.wrong { color: var(--c-adv); background: var(--c-adv-bg); border: 1px solid #f2dcb4; font-weight: 500; }
+.grade-result b { font-weight: 700; }
+
+/* ---------- Simulations ---------- */
+.sim-section {
+  margin: 34px 0 10px;
+  padding-top: 26px;
+  border-top: 1.5px dashed var(--line);
+}
+.sim-head { display: flex; align-items: center; gap: 11px; margin-bottom: 4px; }
+.sim-tag {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--blue);
+  background: var(--blue-tint);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.sim-title {
+  font-family: var(--f-display);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  margin: 0;
+}
+.sim-note { font-size: 13.5px; color: var(--ink-soft); margin: 0 0 14px; }
+
+.sim-host {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+  overflow: hidden;
+}
+.sim-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px 18px;
+  margin-bottom: 14px;
+}
+.sim-row { display: flex; flex-direction: column; gap: 5px; }
+.sim-row-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.sim-row-label { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+.sim-row-val {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blue);
+}
+.sim-range {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 5px;
+  background: var(--line); border-radius: 4px; outline: none;
+  cursor: pointer;
+}
+.sim-range::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--blue); border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(15,28,50,0.3); cursor: pointer;
+}
+.sim-range::-moz-range-thumb {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--blue); border: 2px solid #fff; cursor: pointer;
+}
+.sim-canvas {
+  display: block;
+  width: 100%;
+  background: #fbfcfe;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+}
+.sim-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 13px;
+}
+.sim-stat {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 5px 10px;
+}
+.sim-stat b {
+  color: var(--ink-faint);
+  font-weight: 600;
+  margin-right: 7px;
+  font-family: var(--f-body);
+}
+
 /* ---------- Essays (3-step) ---------- */
 .essay {
   background: var(--paper-2);
