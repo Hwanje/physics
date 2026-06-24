@@ -214,10 +214,14 @@
         const dt = dtClamp(t, ref);
         const ctx = c.ctx, w = c.w, h = c.h; ctx.clearRect(0, 0, w, h);
         const g = 9.8, f = mu.get() * m.get() * g;
-        const net = F.get() - f, acc = F.get() > f ? net / m.get() : 0;
-        v += acc * dt; x += v * dt * 40; // 40 px/m
+        // 움직이는 중에는 마찰이 운동을 방해(감속 가능), 정지 상태에서는 정지마찰을 이겨야 출발
+        let acc;
+        if (v > 0.001) acc = (F.get() - f) / m.get();
+        else acc = F.get() > f ? (F.get() - f) / m.get() : 0;
+        v += acc * dt; if (v < 0) v = 0;
+        x += v * dt * 40; // 40 px/m
         const gy = h - 50, x0 = 50;
-        if (x0 + x > w - 60 || (acc === 0 && v === 0 && x > 5)) { x = 0; v = 0; }
+        if (x0 + x > w - 60 || (v < 0.001 && x > 5)) { x = 0; v = 0; }
         ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, gy + 22); ctx.lineTo(w, gy + 22); ctx.stroke();
         const bx = x0 + x, bs = 30 + m.get() * 4;
         ctx.fillStyle = C.blue; ctx.fillRect(bx, gy - bs + 22, bs, bs);
@@ -290,7 +294,9 @@
         const flight = 2 * vy / g, range = vx * flight, maxh = vy * vy / (2 * g);
         if (tt > flight + 0.5) tt = 0;
         const m = 40, gy = h - 28;
-        const sc = Math.min((w - 2 * m) / Math.max(range, 1) * 0.95, (gy - 24) / Math.max(maxh, 1) * 0.9);
+        // 슬라이더 최댓값(v=30) 기준으로 스케일을 고정한다.
+        // (매 프레임 사거리에 맞춰 다시 맞추면 속력을 올릴수록 화면에서 더 느리게 보이는 착시가 생긴다)
+        const sc = Math.min((w - 2 * m) / 92, (gy - 24) / 46);
         ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke();
         ctx.strokeStyle = "rgba(31,95,214,0.25)"; ctx.lineWidth = 2; ctx.beginPath();
         for (let tau = 0; tau <= flight; tau += flight / 60) {
@@ -416,7 +422,8 @@
       const bImp = slider(ctrl, { label: "충돌 거리 b", min: 6, max: 120, step: 1, value: 55, unit: "px" });
       const c = setupCanvas(host, 250); const st = stats(host);
       let photons = [];
-      function launch() { photons = [{ x: 0, y: 0, vx: 1, vy: 0, trail: [], dead: false, off: bImp.get() }]; }
+      let lastOutcome = "휘어져 지나감 (중력렌즈)";
+      function launch() { photons = [{ x: 0, y: 0, vx: 1, vy: 0, trail: [], dead: false, captured: false }]; }
       launch();
       function draw() {
         const ctx = c.ctx, w = c.w, h = c.h; ctx.clearRect(0, 0, w, h);
@@ -427,22 +434,21 @@
         ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(cx, cy, rh * 3, 0, 7); ctx.fill();
         ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(cx, cy, rh, 0, 7); ctx.fill();
         const p = photons[0];
-        if (!p.started) { p.x = 0; p.y = cy - bImp.get(); p.vx = 1; p.vy = 0; p.trail = []; p.dead = false; p.started = true; }
+        if (!p.started) { p.x = 0; p.y = cy - bImp.get(); p.vx = 1; p.vy = 0; p.trail = []; p.dead = false; p.captured = false; p.started = true; }
         for (let s = 0; s < 4 && !p.dead; s++) {
           const dx = cx - p.x, dy = cy - p.y, r = Math.hypot(dx, dy);
-          if (r < rh) { p.dead = true; break; }
+          if (r < rh) { p.dead = true; p.captured = true; break; }   // 사건의 지평선 안 → 포획
           const aMag = (M * 9) / (r * r);
           p.vx += aMag * dx / r; p.vy += aMag * dy / r;
           const sp = Math.hypot(p.vx, p.vy); p.vx = p.vx / sp * 2.2; p.vy = p.vy / sp * 2.2;
           p.x += p.vx; p.y += p.vy; p.trail.push([p.x, p.y]);
-          if (p.x > w + 20 || p.y < -20 || p.y > h + 20) p.dead = true;
+          if (p.x > w + 20 || p.y < -20 || p.y > h + 20) p.dead = true; // 화면 밖 → 통과
         }
         ctx.strokeStyle = C.orange; ctx.lineWidth = 2; ctx.beginPath();
         p.trail.forEach((pt, i) => i === 0 ? ctx.moveTo(pt[0], pt[1]) : ctx.lineTo(pt[0], pt[1])); ctx.stroke();
         if (p.trail.length) { const last = p.trail[p.trail.length - 1]; dot(ctx, last[0], last[1], 4, "#ffcf5a"); }
-        if (p.dead) { p.started = false; }
-        const captured = bImp.get() < rh * 2.6;
-        st.set([["사건의 지평선", "r ≈ " + rh.toFixed(0) + "px"], ["빛", captured ? "포획됨 (블랙홀)" : "휘어져 지나감 (중력렌즈)"]]);
+        if (p.dead) { lastOutcome = p.captured ? "포획됨 (블랙홀)" : "휘어져 지나감 (중력렌즈)"; p.started = false; }
+        st.set([["사건의 지평선", "r ≈ " + rh.toFixed(0) + "px"], ["빛", lastOutcome]]);
       }
       return run(c, draw);
     },
