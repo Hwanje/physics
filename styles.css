@@ -244,9 +244,21 @@ body {
   border-bottom: 2.5px solid transparent;
   margin-bottom: -1.5px;
   display: flex; align-items: center; gap: 7px;
+  position: relative;
+  transition: color 0.2s ease;
 }
 .tab:hover { color: var(--ink); }
-.tab.active { color: var(--blue-deep); border-bottom-color: var(--blue); }
+.tab.active { color: var(--blue-deep); }
+.tab::after {
+  content: "";
+  position: absolute;
+  left: 12px; right: 12px; bottom: -1.5px;
+  height: 2.5px; border-radius: 3px;
+  background: var(--blue);
+  transform: scaleX(0);
+  transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.tab.active::after { transform: scaleX(1); }
 .tab .count {
   font-family: var(--f-mono);
   font-size: 11px;
@@ -584,6 +596,71 @@ body {
 .katex { font-size: 1.05em; }
 .formula-math .katex-display { margin: 0; }
 
+/* ---------- Motion design ---------- */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(11px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes revealDown {
+  from { opacity: 0; transform: translateY(-7px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* 콘텐츠/탭 전환 진입 (fill-mode backwards → 호버 transform과 충돌하지 않음) */
+.topic-head { animation: fadeUp 0.42s cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
+.tabs       { animation: fadeUp 0.42s 0.05s cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
+.tab-body   { animation: fadeIn 0.3s ease backwards; }
+
+/* 카드 순차 등장 (stagger) */
+.tab-body > * { animation: fadeUp 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
+.tab-body > *:nth-child(1)  { animation-delay: 0.04s; }
+.tab-body > *:nth-child(2)  { animation-delay: 0.09s; }
+.tab-body > *:nth-child(3)  { animation-delay: 0.14s; }
+.tab-body > *:nth-child(4)  { animation-delay: 0.19s; }
+.tab-body > *:nth-child(5)  { animation-delay: 0.24s; }
+.tab-body > *:nth-child(6)  { animation-delay: 0.29s; }
+.tab-body > *:nth-child(7)  { animation-delay: 0.34s; }
+.tab-body > *:nth-child(8)  { animation-delay: 0.39s; }
+.tab-body > *:nth-child(9)  { animation-delay: 0.43s; }
+.tab-body > *:nth-child(n+10) { animation-delay: 0.47s; }
+
+/* 카드 호버 리프트 */
+.problem, .formula-card, .essay {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.problem:hover, .formula-card:hover, .essay:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(15, 28, 50, 0.07);
+  border-color: #cdd6e4;
+}
+
+/* 버튼·링크 인터랙션 */
+.answer-btn, .grade-btn, .topic-link, .chapter-btn, .menu-btn, .step-btn {
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.12s ease, box-shadow 0.2s ease;
+}
+.grade-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(31, 95, 214, 0.25); }
+.answer-btn:active, .grade-btn:active { transform: translateY(0); }
+.topic-link:hover { transform: translateX(2px); }
+
+/* 펼침/결과 노출 */
+.answer.show { animation: revealDown 0.3s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.step.open .step-body { animation: revealDown 0.3s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.grade-result.show { animation: popIn 0.28s cubic-bezier(0.22, 0.61, 0.36, 1); }
+
+/* 시뮬레이션 영역 */
+.sim-host { animation: fadeIn 0.45s ease backwards; }
+.sim-stat { transition: border-color 0.2s ease, color 0.2s ease; }
+
+/* 사이드바 슬라이드는 기존 transition 사용. caret 회전도 기존 transition 유지 */
+
 /* ---------- Responsive ---------- */
 @media (max-width: 860px) {
   .topbar { display: flex; }
@@ -608,5 +685,11 @@ body {
 :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 4px; }
 
 @media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; scroll-behavior: auto !important; }
+  *, *::before, *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+  /* 애니메이션을 끄더라도 탭 인디케이터는 보이도록 */
+  .tab.active::after { transform: scaleX(1) !important; }
 }
