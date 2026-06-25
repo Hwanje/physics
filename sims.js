@@ -172,31 +172,44 @@
       const ctrl = el("div", "sim-controls"); host.appendChild(ctrl);
       const th = slider(ctrl, { label: "기울기", min: 0, max: 45, step: 1, value: 12, unit: "°" });
       const base = slider(ctrl, { label: "받침면 너비", min: 0.4, max: 2.2, step: 0.1, value: 1.2, unit: "m", fmt: (v) => v.toFixed(1) });
-      const ch = slider(ctrl, { label: "무게중심 높이", min: 0.4, max: 2.6, step: 0.1, value: 1.4, unit: "m", fmt: (v) => v.toFixed(1) });
-      const c = setupCanvas(host, 250); const st = stats(host);
+      const ch = slider(ctrl, { label: "물체 높이", min: 0.4, max: 2.6, step: 0.1, value: 1.4, unit: "m", fmt: (v) => v.toFixed(1) });
+      const c = setupCanvas(host, 260); const st = stats(host);
       function draw() {
         const ctx = c.ctx, w = c.w, h = c.h; ctx.clearRect(0, 0, w, h);
-        const sc = 60, gy = h - 36, px = w / 2; // pivot (tipping) corner near center
-        const bw = base.get() * sc, bh = ch.get() * sc;
-        const a = th.get() * Math.PI / 180;
-        const crit = Math.atan((base.get() / 2) / ch.get());
-        const tipping = a >= crit;
+        const sc = 58, gy = h - 28, cx = w / 2;
+        const B = base.get() * sc, H = ch.get() * sc;       // 박스 너비/높이(px)
+        const a = th.get() * Math.PI / 180;                 // 오른쪽(시계방향)으로 기울임
+        // 무게중심은 박스 중심(높이 H/2). 임계각 θc = atan((B/2)/(H/2)) = atan(B/H)
+        const crit = Math.atan(B / H);
+        // 회전축(피벗) = 기울어지는 쪽(오른쪽) 바닥 모서리
+        const Px = cx + B / 2, Py = gy;
+        // 바닥
         ctx.strokeStyle = C.line; ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke();
-        ctx.save(); ctx.translate(px, gy); ctx.rotate(-a);
+        // 무게중심 월드 좌표 (로컬 (-B/2,-H/2)를 피벗 기준 시계방향 a 회전)
+        const cosA = Math.cos(a), sinA = Math.sin(a);
+        const cogx = Px + (-B / 2) * cosA - (-H / 2) * sinA;
+        const cogy = Py + (-B / 2) * sinA + (-H / 2) * cosA;
+        // 수선의 발이 피벗 모서리를 넘어가면 쓰러짐
+        const tipping = cogx > Px + 0.5;
+        // 박스(피벗을 중심으로 시계방향 회전)
+        ctx.save(); ctx.translate(Px, Py); ctx.rotate(a);
         ctx.fillStyle = tipping ? "rgba(214,69,47,0.14)" : "rgba(31,95,214,0.12)";
         ctx.strokeStyle = tipping ? C.red : C.blue; ctx.lineWidth = 2.5;
-        ctx.fillRect(-bw / 2, -bh, bw, bh); ctx.strokeRect(-bw / 2, -bh, bw, bh);
-        dot(ctx, 0, -bh / 2, 5, tipping ? C.red : C.deep); // center of gravity
+        ctx.fillRect(-B, -H, B, H); ctx.strokeRect(-B, -H, B, H); // 로컬: 피벗이 우하단 (0,0)
         ctx.restore();
-        // CoG world position + vertical line to ground
-        const cgx = px + Math.sin(a) * (bh / 2), cgy = gy - Math.cos(a) * (bh / 2);
+        // 수선(연직선): 무게중심에서 바닥까지 수직으로
         ctx.setLineDash([5, 5]); ctx.strokeStyle = tipping ? C.red : C.soft; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(cgx, cgy); ctx.lineTo(cgx, gy + 16); ctx.stroke(); ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(cogx, cogy); ctx.lineTo(cogx, gy); ctx.stroke(); ctx.setLineDash([]);
+        // 무게중심 점 · 수선의 발 · 피벗 모서리 표시
+        dot(ctx, cogx, cogy, 5, tipping ? C.red : C.deep);
+        dot(ctx, cogx, gy, 3.5, tipping ? C.red : C.soft);
+        dot(ctx, Px, gy, 4, C.deep);
+        text(ctx, "회전축", Px + 6, gy - 10, C.soft, "600 10px JetBrains Mono, monospace");
         st.set([
-          ["임계각", (crit * 180 / Math.PI).toFixed(0) + "°"],
-          ["상태", tipping ? "쓰러짐 ✗" : "안정 ✓"],
-          ["", "받침면 넓고·무게중심 낮을수록 안정"]
+          ["임계각 θc", "≈ " + (crit * 180 / Math.PI).toFixed(0) + "°"],
+          ["상태", tipping ? "쓰러짐 ✗ (수선이 받침면 밖)" : "안정 ✓ (수선이 받침면 안)"],
+          ["", "받침면 넓고·물체 낮을수록 안정"]
         ]);
       }
       return run(c, draw);
