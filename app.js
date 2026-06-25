@@ -57,9 +57,42 @@
     return keys;
   }
 
+  // 문자열에서 숫자만 추출한다(LaTeX 첨자·명령·기호 제거 후).
+  function gradeNumbers(s) {
+    const clean = String(s)
+      .replace(/[_^]\{?-?\d+(?:\.\d+)?\}?/g, " ") // 첨자/지수 (r_1, x^2 …)
+      .replace(/\\[a-zA-Z]+/g, " ")               // \times, \text …
+      .replace(/[{}$]/g, " ");
+    const out = []; let m; const re = /-?\d+(?:\.\d+)?/g;
+    while ((m = re.exec(clean))) out.push(parseFloat(m[0]));
+    return out;
+  }
+  function numEq(a, b) { return Math.abs(a - b) <= 1e-9 + 1e-3 * Math.max(1, Math.abs(b)); }
+  function lastEqNum(seg) {
+    const i = seg.lastIndexOf("=");
+    if (i < 0) return null;
+    const ns = gradeNumbers(seg.slice(i + 1));
+    return ns.length ? ns[0] : null;
+  }
+  // 풀이 과정에서 '최종 결괏값' 후보 숫자들을 뽑는다.
+  // (=/⇒ 뒤의 값, 각 절의 마지막 숫자. 화살표가 있으면 화살표 앞 중간계산은 버린다)
+  function resultNumbers(a) {
+    if (!/[=⇒→]|\\Rightarrow/.test(a)) return [];
+    const res = new Set();
+    const add = (seg) => {
+      const e = lastEqNum(seg); if (e != null) res.add(e);
+      const all = gradeNumbers(seg); if (all.length) res.add(all[all.length - 1]);
+    };
+    const arrows = a.split(/\\Rightarrow|⇒|→/);
+    const body = arrows.length > 1 ? arrows.slice(1).join(" . ") : a;
+    body.split(/\(\d\)|\.\s|;|\n/).forEach(add);
+    return [...res];
+  }
+
   function gradeAnswer(input, a) {
     const u = gradeNormalize(input);
     if (u.length < 1) return false;
+    // 1) 개념·단답형: 정규화 텍스트 비교
     for (const k of answerKeys(a)) {
       if (!k) continue;
       if (u === k) return true;
@@ -67,6 +100,12 @@
         const lo = Math.min(u.length, k.length), hi = Math.max(u.length, k.length);
         if (lo / hi >= 0.5) return true;
       }
+    }
+    // 2) 계산형: 입력 숫자가 풀이의 최종 결괏값과 일치하면 정답
+    const rnums = resultNumbers(a);
+    if (rnums.length) {
+      const un = gradeNumbers(input);
+      if (un.length && un.every((x) => rnums.some((r) => numEq(x, r)))) return true;
     }
     return false;
   }
