@@ -522,6 +522,8 @@ body {
   margin-right: 7px;
   font-family: var(--f-body);
 }
+.sim-btn { margin-left: 8px; }
+.problem-sim { margin-top: 13px; }
 
 /* ---------- Essays (3-step) ---------- */
 .essay {

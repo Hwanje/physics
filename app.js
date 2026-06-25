@@ -312,6 +312,30 @@
 
       card.appendChild(btn);
       card.appendChild(ans);
+
+      // 이 문제 전용 시뮬레이션
+      if (p.sim && window.SIMS && SIMS.has(p.sim.id)) {
+        const simBtn = el("button", "answer-btn sim-btn");
+        simBtn.innerHTML = '<span class="sym">▶</span> 시뮬레이션으로 확인';
+        const simHost = el("div", "sim-host problem-sim");
+        simHost.hidden = true;
+        simBtn.addEventListener("click", () => {
+          const open = simHost.hidden;
+          if (open) {
+            simHost.hidden = false;
+            SIMS.render(p.sim.id, simHost, p.sim);
+            simBtn.innerHTML = '<span class="sym">■</span> 시뮬레이션 닫기';
+          } else {
+            SIMS.stop();
+            simHost.hidden = true;
+            simHost.innerHTML = "";
+            simBtn.innerHTML = '<span class="sym">▶</span> 시뮬레이션으로 확인';
+          }
+        });
+        card.appendChild(simBtn);
+        card.appendChild(simHost);
+      }
+
       root.appendChild(card);
     });
   }

@@ -21,6 +21,7 @@
     return n;
   }
 
+  let CURP = {}; // 현재 시뮬레이션 프리셋(슬라이더 key → 초기값)
   function slider(parent, o) {
     const row = el("label", "sim-row");
     const top = el("div", "sim-row-top");
@@ -32,7 +33,7 @@
     input.type = "range";
     input.min = o.min; input.max = o.max;
     input.step = o.step == null ? "any" : o.step;
-    input.value = o.value;
+    input.value = (o.key != null && CURP[o.key] != null) ? CURP[o.key] : o.value;
     row.appendChild(input);
     parent.appendChild(row);
     const fmt = o.fmt || ((v) => v);
@@ -218,9 +219,9 @@
     /* 3. 일과 운동에너지 — F·d = ΔKE */
     "work-energy"(host) {
       const ctrl = el("div", "sim-controls"); host.appendChild(ctrl);
-      const F = slider(ctrl, { label: "힘", min: 0, max: 20, step: 1, value: 12, unit: "N" });
-      const m = slider(ctrl, { label: "질량", min: 1, max: 5, step: 0.5, value: 2, unit: "kg", fmt: (v) => v.toFixed(1) });
-      const mu = slider(ctrl, { label: "마찰계수", min: 0, max: 0.5, step: 0.05, value: 0.1, fmt: (v) => v.toFixed(2) });
+      const F = slider(ctrl, { key: "F", label: "힘", min: 0, max: 40, step: 1, value: 12, unit: "N" });
+      const m = slider(ctrl, { key: "m", label: "질량", min: 1, max: 10, step: 0.5, value: 2, unit: "kg", fmt: (v) => v.toFixed(1) });
+      const mu = slider(ctrl, { key: "mu", label: "마찰계수", min: 0, max: 0.5, step: 0.05, value: 0.1, fmt: (v) => v.toFixed(2) });
       const c = setupCanvas(host, 230); const st = stats(host); const ref = {};
       let x = 0, v = 0;
       function draw(t) {
@@ -254,7 +255,7 @@
     /* 4. 역학적 에너지 보존 — 골짜기 궤도 위 공 */
     "energy-conservation"(host) {
       const ctrl = el("div", "sim-controls"); host.appendChild(ctrl);
-      const h0 = slider(ctrl, { label: "시작 높이", min: 1, max: 4, step: 0.1, value: 3, unit: "m", fmt: (v) => v.toFixed(1) });
+      const h0 = slider(ctrl, { key: "h0", label: "시작 높이", min: 1, max: 4, step: 0.1, value: 3, unit: "m", fmt: (v) => v.toFixed(1) });
       const c = setupCanvas(host, 250); const st = stats(host);
       function draw(t) {
         const ctx = c.ctx, w = c.w, h = c.h; ctx.clearRect(0, 0, w, h);
@@ -295,8 +296,8 @@
     /* 5. 포물선운동 */
     projectile(host) {
       const ctrl = el("div", "sim-controls"); host.appendChild(ctrl);
-      const v0 = slider(ctrl, { label: "속력", min: 5, max: 30, step: 1, value: 18, unit: "m/s" });
-      const th = slider(ctrl, { label: "발사각", min: 10, max: 80, step: 1, value: 45, unit: "°" });
+      const v0 = slider(ctrl, { key: "v0", label: "속력", min: 5, max: 30, step: 1, value: 18, unit: "m/s" });
+      const th = slider(ctrl, { key: "th", label: "발사각", min: 10, max: 80, step: 1, value: 45, unit: "°" });
       const c = setupCanvas(host, 260); const st = stats(host); const ref = {};
       let tt = 0;
       function draw(t) {
@@ -328,8 +329,8 @@
     /* 6. 등속 원운동 — 속도(접선)·구심가속도(중심) */
     circular(host) {
       const ctrl = el("div", "sim-controls"); host.appendChild(ctrl);
-      const r = slider(ctrl, { label: "반지름", min: 0.5, max: 3, step: 0.1, value: 1.5, unit: "m", fmt: (v) => v.toFixed(1) });
-      const v = slider(ctrl, { label: "속력", min: 1, max: 6, step: 0.5, value: 3, unit: "m/s", fmt: (v) => v.toFixed(1) });
+      const r = slider(ctrl, { key: "r", label: "반지름", min: 0.5, max: 8, step: 0.1, value: 1.5, unit: "m", fmt: (v) => v.toFixed(1) });
+      const v = slider(ctrl, { key: "v", label: "속력", min: 1, max: 12, step: 0.1, value: 3, unit: "m/s", fmt: (v) => v.toFixed(1) });
       const c = setupCanvas(host, 250); const st = stats(host); const ref = {};
       let ang = 0;
       function draw(t) {
@@ -356,8 +357,8 @@
     /* 7. 진자운동 */
     pendulum(host) {
       const ctrl = el("div", "sim-controls"); host.appendChild(ctrl);
-      const L = slider(ctrl, { label: "줄 길이", min: 0.5, max: 3, step: 0.1, value: 1.5, unit: "m", fmt: (v) => v.toFixed(1) });
-      const a0 = slider(ctrl, { label: "초기 각", min: 5, max: 60, step: 1, value: 30, unit: "°" });
+      const L = slider(ctrl, { key: "L", label: "줄 길이", min: 0.5, max: 4, step: 0.1, value: 1.5, unit: "m", fmt: (v) => v.toFixed(1) });
+      const a0 = slider(ctrl, { key: "a0", label: "초기 각", min: 5, max: 60, step: 1, value: 30, unit: "°" });
       const c = setupCanvas(host, 250); const st = stats(host);
       function draw(t) {
         const ctx = c.ctx, w = c.w, h = c.h; ctx.clearRect(0, 0, w, h);
@@ -378,8 +379,8 @@
     /* 8. 케플러 법칙 — 타원궤도·면적속도 일정 */
     kepler(host) {
       const ctrl = el("div", "sim-controls"); host.appendChild(ctrl);
-      const e = slider(ctrl, { label: "이심률 e", min: 0, max: 0.8, step: 0.02, value: 0.5, fmt: (v) => v.toFixed(2) });
-      const a = slider(ctrl, { label: "긴반지름 a", min: 1, max: 1.8, step: 0.05, value: 1.4, fmt: (v) => v.toFixed(2) });
+      const e = slider(ctrl, { key: "e", label: "이심률 e", min: 0, max: 0.8, step: 0.02, value: 0.5, fmt: (v) => v.toFixed(2) });
+      const a = slider(ctrl, { key: "a", label: "긴반지름 a", min: 1, max: 1.8, step: 0.05, value: 1.4, fmt: (v) => v.toFixed(2) });
       const c = setupCanvas(host, 270); const st = stats(host); const ref = {};
       let M = 0;
       function draw(t) {
@@ -405,7 +406,7 @@
     /* 9. 등가원리 — 가속하는 승강기 */
     equivalence(host) {
       const ctrl = el("div", "sim-controls"); host.appendChild(ctrl);
-      const acc = slider(ctrl, { label: "승강기 가속도(위 +)", min: -9.8, max: 9.8, step: 0.2, value: 0, unit: "m/s²", fmt: (v) => v.toFixed(1) });
+      const acc = slider(ctrl, { key: "acc", label: "승강기 가속도(위 +)", min: -9.8, max: 9.8, step: 0.2, value: 0, unit: "m/s²", fmt: (v) => v.toFixed(1) });
       const c = setupCanvas(host, 250); const st = stats(host);
       function draw() {
         const ctx = c.ctx, w = c.w, h = c.h; ctx.clearRect(0, 0, w, h);
@@ -431,8 +432,8 @@
     /* 10. 중력렌즈와 블랙홀 — 빛의 휘어짐 */
     blackhole(host) {
       const ctrl = el("div", "sim-controls"); host.appendChild(ctrl);
-      const Mass = slider(ctrl, { label: "질량 M", min: 1, max: 10, step: 0.5, value: 5, fmt: (v) => v.toFixed(1) });
-      const bImp = slider(ctrl, { label: "충돌 거리 b", min: 6, max: 120, step: 1, value: 55, unit: "px" });
+      const Mass = slider(ctrl, { key: "M", label: "질량 M", min: 1, max: 10, step: 0.5, value: 5, fmt: (v) => v.toFixed(1) });
+      const bImp = slider(ctrl, { key: "b", label: "충돌 거리 b", min: 6, max: 120, step: 1, value: 55, unit: "px" });
       const c = setupCanvas(host, 250); const st = stats(host);
       let photons = [];
       let lastOutcome = "휘어져 지나감 (중력렌즈)";
@@ -469,9 +470,9 @@
     /* 11. 쿨롱 법칙 — 두 전하 사이의 힘 */
     coulomb(host) {
       const ctrl = el("div", "sim-controls"); host.appendChild(ctrl);
-      const q1 = slider(ctrl, { label: "전하 q₁", min: -5, max: 5, step: 1, value: 3 });
-      const q2 = slider(ctrl, { label: "전하 q₂", min: -5, max: 5, step: 1, value: -2 });
-      const d = slider(ctrl, { label: "거리 r", min: 1, max: 5, step: 0.2, value: 3, unit: "m", fmt: (v) => v.toFixed(1) });
+      const q1 = slider(ctrl, { key: "q1", label: "전하 q₁", min: -5, max: 5, step: 1, value: 3 });
+      const q2 = slider(ctrl, { key: "q2", label: "전하 q₂", min: -5, max: 5, step: 1, value: -2 });
+      const d = slider(ctrl, { key: "d", label: "거리 r", min: 1, max: 5, step: 0.2, value: 3, unit: "m", fmt: (v) => v.toFixed(1) });
       const c = setupCanvas(host, 220); const st = stats(host);
       function draw() {
         const ctx = c.ctx, w = c.w, h = c.h; ctx.clearRect(0, 0, w, h);
@@ -503,8 +504,8 @@
     /* 12. 전위 — 점전하 주위의 전위/등전위선 */
     potential(host) {
       const ctrl = el("div", "sim-controls"); host.appendChild(ctrl);
-      const Q = slider(ctrl, { label: "전하 Q", min: -5, max: 5, step: 1, value: 3 });
-      const r = slider(ctrl, { label: "측정 거리 r", min: 0.5, max: 4, step: 0.1, value: 2, unit: "m", fmt: (v) => v.toFixed(1) });
+      const Q = slider(ctrl, { key: "Q", label: "전하 Q", min: -5, max: 5, step: 1, value: 3 });
+      const r = slider(ctrl, { key: "r", label: "측정 거리 r", min: 0.5, max: 4, step: 0.1, value: 2, unit: "m", fmt: (v) => v.toFixed(1) });
       const c = setupCanvas(host, 240); const st = stats(host);
       function draw() {
         const ctx = c.ctx, w = c.w, h = c.h; ctx.clearRect(0, 0, w, h);
@@ -528,9 +529,9 @@
     /* 13. 축전기 — 평행판 충전 */
     capacitor(host) {
       const ctrl = el("div", "sim-controls"); host.appendChild(ctrl);
-      const V = slider(ctrl, { label: "전압 V", min: 1, max: 10, step: 1, value: 6, unit: "V" });
-      const dd = slider(ctrl, { label: "극판 간격 d", min: 0.5, max: 3, step: 0.1, value: 1.5, unit: "mm", fmt: (v) => v.toFixed(1) });
-      const A = slider(ctrl, { label: "극판 넓이 A", min: 1, max: 3, step: 0.1, value: 2, fmt: (v) => v.toFixed(1) });
+      const V = slider(ctrl, { key: "V", label: "전압 V", min: 1, max: 10, step: 1, value: 6, unit: "V" });
+      const dd = slider(ctrl, { key: "d", label: "극판 간격 d", min: 0.5, max: 3, step: 0.1, value: 1.5, unit: "mm", fmt: (v) => v.toFixed(1) });
+      const A = slider(ctrl, { key: "A", label: "극판 넓이 A", min: 1, max: 3, step: 0.1, value: 2, fmt: (v) => v.toFixed(1) });
       const c = setupCanvas(host, 240); const st = stats(host);
       function draw() {
         const ctx = c.ctx, w = c.w, h = c.h; ctx.clearRect(0, 0, w, h);
@@ -559,64 +560,164 @@
       return run(c, draw);
     },
 
-    /* 14. 옴의 법칙·직렬 — 전류 일정, 전압 분배 */
-    "ohm-series"(host) {
-      const ctrl = el("div", "sim-controls"); host.appendChild(ctrl);
-      const V = slider(ctrl, { label: "전압 V", min: 1, max: 12, step: 1, value: 9, unit: "V" });
-      const R1 = slider(ctrl, { label: "저항 R₁", min: 1, max: 10, step: 1, value: 4, unit: "Ω" });
-      const R2 = slider(ctrl, { label: "저항 R₂", min: 1, max: 10, step: 1, value: 2, unit: "Ω" });
-      const c = setupCanvas(host, 230); const st = stats(host);
+    /* 14. 옴의 법칙·직렬 — 전류 일정, 전압 분배 (N개 저항) */
+    "ohm-series"(host, opts) {
+      const cfg = opts && opts.config;
+      const fr = (x) => Number.isInteger(x) ? ("" + x) : x.toFixed(1);
+      let getV, getRs;
+      if (cfg && cfg.resistors) {
+        getV = () => cfg.V; getRs = () => cfg.resistors;
+      } else {
+        const ctrl = el("div", "sim-controls"); host.appendChild(ctrl);
+        const V = slider(ctrl, { key: "V", label: "전압 V", min: 1, max: 100, step: 1, value: 9, unit: "V" });
+        const R1 = slider(ctrl, { key: "R1", label: "저항 R₁", min: 1, max: 30, step: 1, value: 4, unit: "Ω" });
+        const R2 = slider(ctrl, { key: "R2", label: "저항 R₂", min: 1, max: 30, step: 1, value: 2, unit: "Ω" });
+        getV = () => V.get(); getRs = () => [R1.get(), R2.get()];
+      }
+      const c = setupCanvas(host, 235); const st = stats(host);
       function draw(t) {
         const ctx = c.ctx, w = c.w, h = c.h; ctx.clearRect(0, 0, w, h);
-        const I = V.get() / (R1.get() + R2.get()), V1 = I * R1.get(), V2 = I * R2.get(), P = V.get() * I;
-        const x0 = 46, x1 = w - 46, y0 = 40, y1 = h - 40;
+        const V = getV(), Rs = getRs(), sum = Rs.reduce((a, b) => a + b, 0), I = V / sum, P = V * I;
+        const x0 = 46, x1 = w - 46, y0 = 42, y1 = h - 42;
         const TL = [x0, y0], TR = [x1, y0], BR = [x1, y1], BL = [x0, y1];
         wire(ctx, TL, TR); wire(ctx, TR, BR); wire(ctx, BR, BL); wire(ctx, BL, TL);
-        // battery on left edge
         const my = (y0 + y1) / 2;
         ctx.strokeStyle = C.deep; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x0 - 9, my - 9); ctx.lineTo(x0 + 9, my - 9); ctx.stroke();
         ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(x0 - 5, my + 9); ctx.lineTo(x0 + 5, my + 9); ctx.stroke();
-        text(ctx, V.get() + "V", x0 - 14, my, C.deep, "700 11px JetBrains Mono, monospace", "right");
-        resistorBox(ctx, (x0 + x1) / 2, y0, "R₁=" + R1.get() + "Ω");
-        resistorBox(ctx, x1, (y0 + y1) / 2, "R₂=" + R2.get() + "Ω");
-        // current dots — same current everywhere (series)
+        text(ctx, fr(V) + "V", x0 - 14, my, C.deep, "700 11px JetBrains Mono, monospace", "right");
+        const n = Rs.length;
+        for (let i = 0; i < n; i++) {
+          const cxr = x0 + (x1 - x0) * (i + 1) / (n + 1);
+          resistorBox(ctx, cxr, y0, "R" + (i + 1) + "=" + fr(Rs[i]) + "Ω");
+        }
         segDots(ctx, TL, TR, I, t, C.orange); segDots(ctx, TR, BR, I, t, C.orange);
         segDots(ctx, BR, BL, I, t, C.orange); segDots(ctx, BL, TL, I, t, C.orange);
-        st.set([["전류 I=V/ΣR", I.toFixed(2) + " A"], ["V₁ / V₂", V1.toFixed(1) + " / " + V2.toFixed(1) + " V"], ["소비전력 P=VI", P.toFixed(1) + " W"]]);
+        st.set([
+          ["합성저항 ΣR", fr(sum) + " Ω"],
+          ["전류 I=V/ΣR", I.toFixed(2) + " A"],
+          ["각 전압 IR", Rs.map((R) => (I * R).toFixed(1)).join(" / ") + " V"],
+          ["전체전력 P=VI", P.toFixed(1) + " W"]
+        ]);
       }
       return run(c, draw);
     },
 
-    /* 15. 병렬 연결 — 전압 일정, 전류 분배 */
-    parallel(host) {
-      const ctrl = el("div", "sim-controls"); host.appendChild(ctrl);
-      const V = slider(ctrl, { label: "전압 V", min: 1, max: 12, step: 1, value: 12, unit: "V" });
-      const R1 = slider(ctrl, { label: "저항 R₁", min: 1, max: 10, step: 1, value: 4, unit: "Ω" });
-      const R2 = slider(ctrl, { label: "저항 R₂", min: 1, max: 10, step: 1, value: 6, unit: "Ω" });
-      const c = setupCanvas(host, 240); const st = stats(host);
+    /* 15. 병렬 연결 — 전압 일정, 전류 분배 (N개 가지) */
+    parallel(host, opts) {
+      const cfg = opts && opts.config;
+      const fr = (x) => Number.isInteger(x) ? ("" + x) : x.toFixed(1);
+      const COLS = [C.orange, C.teal, C.purple, C.blue];
+      let getV, getRs;
+      if (cfg && cfg.resistors) {
+        getV = () => cfg.V; getRs = () => cfg.resistors;
+      } else {
+        const ctrl = el("div", "sim-controls"); host.appendChild(ctrl);
+        const V = slider(ctrl, { key: "V", label: "전압 V", min: 1, max: 100, step: 1, value: 12, unit: "V" });
+        const R1 = slider(ctrl, { key: "R1", label: "저항 R₁", min: 1, max: 30, step: 1, value: 4, unit: "Ω" });
+        const R2 = slider(ctrl, { key: "R2", label: "저항 R₂", min: 1, max: 30, step: 1, value: 6, unit: "Ω" });
+        getV = () => V.get(); getRs = () => [R1.get(), R2.get()];
+      }
+      const c = setupCanvas(host, 250); const st = stats(host);
       function draw(t) {
         const ctx = c.ctx, w = c.w, h = c.h; ctx.clearRect(0, 0, w, h);
-        const I1 = V.get() / R1.get(), I2 = V.get() / R2.get(), It = I1 + I2;
-        const Req = 1 / (1 / R1.get() + 1 / R2.get());
-        const lx = 70, rx = w - 60, ty = 56, by = h - 56, my = (ty + by) / 2;
+        const V = getV(), Rs = getRs();
+        const Is = Rs.map((R) => V / R), It = Is.reduce((a, b) => a + b, 0);
+        const Req = 1 / Rs.reduce((a, R) => a + 1 / R, 0);
+        const lx = 70, rx = w - 56, ty = 46, by = h - 38, my = (ty + by) / 2, n = Rs.length;
         wire(ctx, [lx, ty], [lx, by]); wire(ctx, [rx, ty], [rx, by]);
-        wire(ctx, [lx, ty], [rx, ty]); wire(ctx, [lx, by], [rx, by]);
-        // battery on far left
         ctx.strokeStyle = C.deep; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(lx - 22, my - 9); ctx.lineTo(lx - 22, my + 9); ctx.stroke();
         wire(ctx, [lx - 22, ty + 6], [lx, ty + 6]); wire(ctx, [lx - 22, by - 6], [lx, by - 6]);
         wire(ctx, [lx - 22, my - 9], [lx - 22, ty + 6]); wire(ctx, [lx - 22, my + 9], [lx - 22, by - 6]);
-        text(ctx, V.get() + "V", lx - 28, my, C.deep, "700 11px JetBrains Mono, monospace", "right");
-        resistorBox(ctx, (lx + rx) / 2, ty, "R₁=" + R1.get() + "Ω");
-        resistorBox(ctx, (lx + rx) / 2, by, "R₂=" + R2.get() + "Ω");
-        // dots: rails carry total current, each branch its own
+        text(ctx, fr(V) + "V", lx - 28, my, C.deep, "700 11px JetBrains Mono, monospace", "right");
+        for (let i = 0; i < n; i++) {
+          const yk = n === 1 ? my : ty + (by - ty) * (i + 0.5) / n;
+          wire(ctx, [lx, yk], [rx, yk]);
+          resistorBox(ctx, (lx + rx) / 2, yk, "R" + (i + 1) + "=" + fr(Rs[i]) + "Ω");
+          segDots(ctx, [lx, yk], [rx, yk], Is[i], t, COLS[i % COLS.length]);
+        }
         segDots(ctx, [lx, by], [lx, ty], It, t, C.deep);
         segDots(ctx, [rx, ty], [rx, by], It, t, C.deep);
-        segDots(ctx, [lx, ty], [rx, ty], I1, t, C.orange);
-        segDots(ctx, [lx, by], [rx, by], I2, t, C.teal);
         st.set([
-          ["가지전류 I₁ / I₂", I1.toFixed(1) + " / " + I2.toFixed(1) + " A"],
+          ["가지전류 V/R", Is.map((x) => x.toFixed(1)).join(" / ") + " A"],
           ["전체전류 Iₜ", It.toFixed(1) + " A"],
-          ["합성저항", Req.toFixed(2) + " Ω"]
+          ["합성저항", fr(Math.round(Req * 100) / 100) + " Ω"]
+        ]);
+      }
+      return run(c, draw);
+    },
+
+    /* 지레/평형 — 임의 개수의 하중을 가진 막대 (config 기반, 문제 전용) */
+    lever(host, opts) {
+      const cfg = (opts && opts.config) || {};
+      const c = setupCanvas(host, 250); const st = stats(host);
+      const L = cfg.length || 2;                 // 막대 길이(m)
+      const loads = cfg.loads || [];             // [{x, f, label}]  f>0 아래로, f<0 위로
+      const fulcrum = cfg.fulcrum;               // 단일 받침점 x (틸트 모드)
+      const supports = cfg.supports;             // [x1, x2] (두 받침점 모드)
+      const fr = (x) => Number.isInteger(x) ? ("" + x) : x.toFixed(1);
+      let ang = 0;
+      function draw() {
+        const ctx = c.ctx, w = c.w, h = c.h; ctx.clearRect(0, 0, w, h);
+        const m = 40, bx0 = m, bx1 = w - m, cy = h * 0.52;
+        const sx = (x) => bx0 + (bx1 - bx0) * (x / L);   // m → px
+        const sc = (bx1 - bx0) / L;
+        const px = (typeof fulcrum === "number") ? sx(fulcrum) : (w / 2);
+        // 두 받침점 모드: 반력 계산, 막대 수평
+        if (supports && supports.length === 2) {
+          const [a1, a2] = supports;
+          // ΣF=0, Στ(about a1)=0 → R2
+          let sumF = 0, torque1 = 0;
+          loads.forEach((ld) => { sumF += ld.f; torque1 += ld.f * (ld.x - a1); });
+          const R2 = torque1 / (a2 - a1), R1 = sumF - R2;
+          const by = cy;
+          // 막대
+          ctx.strokeStyle = C.blue; ctx.lineWidth = 7; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.moveTo(bx0, by); ctx.lineTo(bx1, by); ctx.stroke(); ctx.lineCap = "butt";
+          // 받침점(삼각형) + 반력(위로)
+          [[a1, R1], [a2, R2]].forEach(([ax, R]) => {
+            const X = sx(ax);
+            ctx.fillStyle = C.deep; ctx.beginPath(); ctx.moveTo(X, by + 6); ctx.lineTo(X - 11, by + 26); ctx.lineTo(X + 11, by + 26); ctx.closePath(); ctx.fill();
+            arrow(ctx, X, by + 4, X, by + 4 - Math.max(10, Math.min(70, Math.abs(R) * 2.2)) * Math.sign(R || 1), C.teal, 3);
+            text(ctx, "R=" + fr(Math.round(R * 10) / 10), X, by + 38, C.teal, "700 11px JetBrains Mono, monospace", "center");
+          });
+          // 하중(아래/위 화살표)
+          loads.forEach((ld) => {
+            const X = sx(ld.x), len = Math.max(10, Math.min(64, Math.abs(ld.f) * 2.2));
+            const dir = ld.f >= 0 ? 1 : -1;
+            arrow(ctx, X, by, X, by + dir * len, ld.f >= 0 ? C.orange : C.purple, 2.5);
+            text(ctx, (ld.label || (fr(Math.abs(ld.f)) + "N")), X, by + dir * (len + 11), C.soft, "600 10px JetBrains Mono, monospace", "center");
+          });
+          st.set([
+            ["왼쪽 반력 R₁", fr(Math.round(R1 * 10) / 10) + " N"],
+            ["오른쪽 반력 R₂", fr(Math.round(R2 * 10) / 10) + " N"],
+            ["", "ΣF=0, Στ=0 (정지 평형)"]
+          ]);
+          return;
+        }
+        // 단일 받침점 모드: 알짜 돌림힘으로 살짝 기울임
+        let tauL = 0, tauR = 0;
+        loads.forEach((ld) => {
+          const arm = ld.x - fulcrum, tau = ld.f * arm; // f아래로 +
+          if (arm < 0) tauL += -tau; else tauR += tau;   // 양쪽 회전 효과 크기
+        });
+        const net = tauR - tauL;
+        ang += (Math.max(-0.3, Math.min(0.3, net * 0.02)) - ang) * 0.08;
+        // 받침점 삼각형
+        ctx.fillStyle = C.deep; ctx.beginPath(); ctx.moveTo(px, cy + 6); ctx.lineTo(px - 16, cy + 34); ctx.lineTo(px + 16, cy + 34); ctx.closePath(); ctx.fill();
+        ctx.save(); ctx.translate(px, cy); ctx.rotate(ang);
+        ctx.strokeStyle = C.blue; ctx.lineWidth = 7; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.moveTo(bx0 - px, 0); ctx.lineTo(bx1 - px, 0); ctx.stroke(); ctx.lineCap = "butt";
+        loads.forEach((ld) => {
+          const lxp = (sx(ld.x) - px), len = Math.max(10, Math.min(60, Math.abs(ld.f) * 2));
+          const dir = ld.f >= 0 ? 1 : -1;
+          arrow(ctx, lxp, 0, lxp, dir * len, ld.f >= 0 ? C.orange : C.purple, 2.5);
+          text(ctx, (ld.label || (fr(Math.abs(ld.f)) + "N")), lxp, dir * (len + 10), C.soft, "600 10px JetBrains Mono, monospace", "center");
+        });
+        ctx.restore();
+        st.set([
+          ["왼쪽 돌림힘 Στ", fr(Math.round(tauL * 10) / 10) + " N·m"],
+          ["오른쪽 돌림힘 Στ", fr(Math.round(tauR * 10) / 10) + " N·m"],
+          ["상태", Math.abs(net) < 0.05 ? "평형 ⚖" : (net > 0 ? "오른쪽으로 회전" : "왼쪽으로 회전")]
         ]);
       }
       return run(c, draw);
@@ -627,12 +728,14 @@
   let active = null;
   window.SIMS = {
     has(id) { return typeof REG[id] === "function"; },
-    render(id, host) {
+    render(id, host, opts) {
       this.stop();
       const build = REG[id];
       if (!build) return false;
       host.innerHTML = "";
-      try { active = build(host) || null; } catch (e) { active = null; }
+      CURP = (opts && opts.presets) || {};
+      try { active = build(host, opts) || null; } catch (e) { active = null; }
+      CURP = {};
       return true;
     },
     stop() {
