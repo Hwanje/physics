@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>물리학 Ⅱ · 핵심 개념 요약</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous" />
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+
+<style>
+  :root {
+    --ink:#16181d; --soft:#4b515e; --faint:#7a8190; --line:#dce1e9;
+    --accent:#1f5fd6; --deep:#0f2c5c; --bg:#f6f8fb;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: "Pretendard", system-ui, sans-serif; color: var(--ink);
+    background: #eef1f5; font-size: 13px; line-height: 1.5;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .mono { font-family: "JetBrains Mono", monospace; }
+
+  .toolbar {
+    position: sticky; top: 0; z-index: 10; background: #fff; border-bottom: 1px solid var(--line);
+    padding: 10px 16px; display: flex; gap: 12px; align-items: center;
+  }
+  .toolbar b { font-weight: 700; }
+  .toolbar .hint { color: var(--faint); font-size: 12px; }
+  .print-btn { margin-left: auto; background: var(--accent); color: #fff; border: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; cursor: pointer; }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 18px 20px 40px; background: #fff; }
+
+  .head {
+    display: flex; align-items: center; gap: 12px; border-bottom: 2px solid var(--deep);
+    padding-bottom: 10px; margin-bottom: 12px;
+  }
+  .head .badge { width: 38px; height: 38px; display: grid; place-items: center; background: var(--deep); color: #fff; border-radius: 9px; font-family: "Space Grotesk"; font-weight: 700; font-size: 19px; }
+  .head h1 { font-family: "Space Grotesk"; font-size: 21px; margin: 0; letter-spacing: -0.3px; }
+  .head .sub { color: var(--faint); font-size: 11.5px; margin-top: 1px; }
+
+  /* 단(段) 흐름 */
+  .flow { column-count: 1; }
+
+  .chapter-band {
+    column-span: all; -webkit-column-span: all;
+    margin: 16px 0 10px; padding: 7px 14px; border-radius: 8px;
+    background: var(--deep); color: #fff;
+    font-family: "Space Grotesk"; font-weight: 700; font-size: 16px;
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  .chapter-band .n { font-family: "JetBrains Mono"; font-size: 12px; opacity: 0.8; }
+  .chapter-band .cs { font-weight: 500; font-size: 12px; opacity: 0.85; margin-left: auto; }
+
+  .topic { break-inside: avoid; margin: 0 0 10px; padding-bottom: 8px; border-bottom: 1px dotted var(--line); }
+  .topic-h { font-weight: 700; font-size: 14.5px; color: var(--deep); margin: 0 0 4px; }
+  .topic-h .tn { color: var(--accent); font-family: "JetBrains Mono"; font-size: 12px; }
+
+  .concept { margin: 5px 0 6px; }
+  .cname { font-weight: 700; font-size: 12.5px; }
+  .cname::before { content: "▸ "; color: var(--accent); }
+  .cbody { font-size: 12px; color: #2b303a; margin: 2px 0 4px; line-height: 1.5; }
+  .cbody b { color: var(--ink); }
+
+  .f {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    background: #f6f9fc; border: 1px solid #e7edf4; border-left: 3px solid var(--accent); border-radius: 6px;
+    padding: 5px 13px; margin: 4px 0;
+  }
+  .f .fx { font-size: 13.5px; }
+  .f .fd { font-size: 11px; color: var(--soft); }
+  .katex { font-size: 1em; }
+
+  @media print {
+    body { background: #fff; font-size: 10pt; }
+    .toolbar { display: none; }
+    .page { max-width: none; margin: 0; padding: 0; }
+    @page { size: A4; margin: 12mm 13mm 12mm; }
+    .chapter-band:first-of-type { margin-top: 2px; }
+  }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <b>물리학 Ⅱ 핵심 개념 요약</b>
+    <span class="hint">브라우저에서 <b>인쇄 → PDF로 저장</b>(A4)으로 출력하세요.</span>
+    <button class="print-btn" onclick="window.print()">인쇄 / PDF로 저장</button>
+  </div>
+
+  <div class="page">
+    <div class="head">
+      <div class="badge">Ⅱ</div>
+      <div>
+        <h1>물리학 Ⅱ · 핵심 개념 요약</h1>
+        <div class="sub" id="meta"></div>
+      </div>
+    </div>
+    <div class="flow" id="flow"></div>
+  </div>
+
+  <script src="data.js"></script>
+  <script>
+  (function () {
+    "use strict";
+    function el(tag, cls, html) { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; }
+    const flow = document.getElementById("flow");
+
+    let nConcept = 0, nTopic = 0;
+    CURRICULUM.forEach((ch) => ch.topics.forEach((tp) => { nTopic++; nConcept += (tp.concepts || []).length; }));
+    document.getElementById("meta").textContent =
+      "단원 " + CURRICULUM.length + " · 주제 " + nTopic + " · 핵심 개념 " + nConcept + "개 · 공식 정리";
+
+    let topicNo = 0;
+    CURRICULUM.forEach((ch, ci) => {
+      const band = el("div", "chapter-band");
+      band.innerHTML = '<span class="n">' + String(ci + 1).padStart(2, "0") + '</span><span>' + ch.title + '</span>' +
+        (ch.subtitle ? '<span class="cs">' + ch.subtitle + '</span>' : '');
+      flow.appendChild(band);
+
+      ch.topics.forEach((tp) => {
+        topicNo++;
+        const t = el("div", "topic");
+        t.appendChild(el("div", "topic-h", '<span class="tn">' + String(topicNo).padStart(2, "0") + '.</span> ' + tp.title));
+        (tp.concepts || []).forEach((c) => {
+          const cb = el("div", "concept");
+          cb.appendChild(el("div", "cname", c.name));
+          if (c.body) cb.appendChild(el("div", "cbody", c.body));
+          (c.formulas || []).forEach((f) => {
+            const fr = el("div", "f");
+            fr.appendChild(el("span", "fx", "$" + f.latex + "$"));
+            if (f.desc) fr.appendChild(el("span", "fd", f.desc));
+            cb.appendChild(fr);
+          });
+          t.appendChild(cb);
+        });
+        flow.appendChild(t);
+      });
+    });
+
+    function renderAll() {
+      if (typeof renderMathInElement === "function") {
+        try { renderMathInElement(flow, { delimiters: [{ left: "$$", right: "$$", display: true }, { left: "$", right: "$", display: false }], throwOnError: false }); } catch (e) {}
+      }
+      window.__ready = true;
+    }
+    if (document.readyState === "complete") renderAll(); else window.addEventListener("load", renderAll);
+  })();
+  </script>
+</body>
+</html>
